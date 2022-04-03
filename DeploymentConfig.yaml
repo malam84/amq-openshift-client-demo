@@ -1,0 +1,80 @@
+apiVersion: apps.openshift.io/v1
+kind: DeploymentConfig
+metadata:
+  labels:
+    app: amq-openshift-client-demo
+  name: amq-openshift-client-demo
+  namespace: amq-client
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    app: amq-openshift-client-demo
+    deploymentconfig: amq-openshift-client-demo
+  strategy:
+    activeDeadlineSeconds: 21600
+    resources: {}
+    rollingParams:
+      intervalSeconds: 1
+      maxSurge: 25%
+      maxUnavailable: 25%
+      timeoutSeconds: 600
+      updatePeriodSeconds: 1
+    type: Rolling
+  template:
+    metadata:
+      annotations:
+        openshift.io/generated-by: OpenShiftNewApp
+      creationTimestamp: null
+      labels:
+        app: amq-openshift-client-demo
+        deploymentconfig: amq-openshift-client-demo
+    spec:
+      containers:
+        - env:
+          - name: JAVA_OPTIONS
+            value: "-Dspring.config.location=file:/deployments/config/"
+          volumeMounts:
+          - name: amq-openshift-config
+            mountPath: /deployments/config
+            readOnly: true
+          image: >-
+            172.30.1.1:5000/amq-client/amq-openshift-client-demo@sha256:6b0891c2360689ecf6d2ae717dfb6fd722162dc6f0936c8a9a9b0ca9e0c4f689
+          imagePullPolicy: Always
+          name: amq-openshift-client-demo
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+            - containerPort: 8443
+              protocol: TCP
+            - containerPort: 8778
+              protocol: TCP
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+      volumes:
+        - name: amq-openshift-config
+          configMap:
+            name: amq-openshift-client-config
+            items:
+              - key: application.properties
+                path: application.properties
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+  test: false
+  triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+          - amq-openshift-client-demo
+        from:
+          kind: ImageStreamTag
+          name: 'amq-openshift-client-demo:latest'
+          namespace: amq-client
+        lastTriggeredImage: >-
+          172.30.1.1:5000/amq-client/amq-openshift-client-demo@sha256:6b0891c2360689ecf6d2ae717dfb6fd722162dc6f0936c8a9a9b0ca9e0c4f689
+      type: ImageChange

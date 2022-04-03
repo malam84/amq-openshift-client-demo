@@ -1,5 +1,6 @@
 package com.amq.openshift.client.demo.controller;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -14,6 +15,7 @@ public class Controller {
 
     @RequestMapping("/test")
     public String testApp() {
+
         return "Hello, Application is running";
     }
 }
